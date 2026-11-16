@@ -152,9 +152,9 @@ async function pipeSnapshots({ device, deviceId, req, res }) {
   res.end()
 }
 
-/** 下发时可选的会话设置：预设、模型、权限。都从宿主现成的服务里读，不另存一份。 */
+/** 下发时可选的会话设置：预设、模型、权限、目标模式。都从宿主现成的服务里读，不另存一份。 */
 async function collectOptions(ctx) {
-  const options = { presets: [], models: null, permissions: null }
+  const options = { presets: [], models: null, permissions: null, goal: Boolean(ctx.get('goals')) }
 
   const presets = ctx.get('agentPresets')
   if (presets) {
@@ -226,6 +226,23 @@ async function applySessionOptions(ctx, sessionId, body) {
   }
 }
 
+/**
+ * 目标模式：把这次任务设成会话的持续目标，让它在回合之间自动继续。
+ * 必须在下发之后调用：目标一旦创建，goal driver 会在 agent 空闲时立刻开跑一轮，
+ * 先建目标的话用户提示词反而成了竞争消息。已有未完成目标的会话不覆盖。
+ */
+export async function ensureGoal(ctx, sessionId, objective) {
+  const goals = ctx.get('goals')
+  if (!goals) throw new Error('当前配置不支持目标模式，因此无法创建目标。')
+  const resolved = await ctx.get('sessionController').resolveAgent(sessionId)
+  if (resolved?.error) throw resolved.error
+  const agent = resolved?.agent
+  if (!agent) throw new Error('无法解析会话 agent，因此无法创建目标。')
+  const current = goals.get(agent)
+  if (current !== undefined && current.phase !== 'complete') return
+  goals.create(agent, { objective })
+}
+
 async function dispatchBatch(ctx, registry, body) {
   const deviceIds = Array.isArray(body?.deviceIds) ? body.deviceIds : []
   const prompt = String(body?.prompt ?? '').trim()
@@ -267,7 +284,16 @@ async function dispatchBatch(ctx, registry, body) {
           },
           AbortSignal.timeout(30000),
         )
-        return { deviceId, sessionId, ok: true }
+        let goalError
+        if (body.goal === true) {
+          try {
+            await ensureGoal(ctx, sessionId, prompt)
+          } catch (error) {
+            // 提示词已经下发，目标没建起来不应该让整台设备显示成失败。
+            goalError = error?.message ?? String(error)
+          }
+        }
+        return { deviceId, sessionId, ok: true, ...(goalError ? { goalError } : {}) }
       } catch (error) {
         return { deviceId, ok: false, error: error?.message ?? String(error) }
       }

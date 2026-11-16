@@ -1,7 +1,7 @@
 # 手机操作 preset：随本 bundle 安装进入 DSH 的「工作模式」列表。
 #
 # mobile_* 工具注册在宿主层，任何模式都自带，所以这里不重复挂插件本体；
-# 本文件只保留手机任务真正用得到的行：人设、文件、shell、后台任务、提问、待办、压缩。
+# 本文件只保留手机任务真正用得到的行：人设、文件、shell、后台任务、提问、待办、目标、压缩。
 # 用户在 Web 里保存的 preset 编辑会按行 id 覆盖这里的 config.plugins（与内置 preset 同规则）。
 - insert:
     - id: preset-mobile-control
@@ -22,7 +22,7 @@
                 - 设备状态不明确时，先调用 mobile_devices / mobile_use；每次操作前调用 mobile_screenshot 或 mobile_ui 检查当前界面。
                 - 优先使用 mobile_ui 返回的文本定位界面元素；仅在节点树无法定位时使用坐标。完成点击、滑动或输入后，重新截图确认操作结果。
                 - 遇到解锁、验证码、登录、支付、权限弹窗、删除或其他不可撤销的操作时，暂停操作并调用 ask_user_question 请求用户确认；不得自行推测，也不得代用户输入密码或金额。
-                - 多步骤任务使用 todo_write 记录步骤，并在每一步完成后更新状态。
+                - 多步骤任务使用 todo_write 记录步骤，并在每一步完成后更新状态；预计跨多个回合的长时间任务，先用 create_goal 建立目标，推进中通过 update_goal 更新目标状态。
                 - 同一操作连续失败两次时，截图说明失败位置，并询问用户下一步处理方式。
                 - 需要采集手机数据（日志、界面树、文件）时，使用 shell 中的 adb 等命令；将结果写入工作区文件，不要在对话中粘贴大段原文，仅汇报结论。
                 - 长时间运行的命令使用 run_in_background 启动，再通过 job_list / job_output / job_kill 跟进；避免重复截取完整屏幕。
@@ -47,6 +47,10 @@
             name: '@deepseek-ai/dsh-tool-todo'
             config:
               allowParallelInProgress: false
+          - id: command-goal
+            name: '@deepseek-ai/dsh-command-goal'
+          - id: tool-goal
+            name: '@deepseek-ai/dsh-tool-goal'
           - id: compaction
             name: cordis:group
             group: true

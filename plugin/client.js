@@ -41,6 +41,7 @@ window.__ModuleLoader__.load({
       'batch.result': '结果',
       'batch.open': '打开',
       'batch.failed': '失败',
+      'batch.goalFailed': '目标未创建',
       'batch.pick': '设备',
       'batch.selectAll': '全选',
       'batch.clearAll': '取消全选',
@@ -48,6 +49,8 @@ window.__ModuleLoader__.load({
       'opt.permission': '权限',
       'opt.model': '模型',
       'opt.workspace': '工作区',
+      'opt.goal': '目标模式',
+      'opt.goalHint': '把任务设为持续目标，会话会自动继续直到完成或需要你确认。',
       'opt.addWorkspace': '添加工作区…',
       'preset.standard': '标准模式',
       'preset.ptc': 'PTC',
@@ -107,6 +110,7 @@ window.__ModuleLoader__.load({
       'batch.result': 'Results',
       'batch.open': 'Open',
       'batch.failed': 'failed',
+      'batch.goalFailed': 'goal not created',
       'batch.pick': 'Devices',
       'batch.selectAll': 'Select all',
       'batch.clearAll': 'Clear all',
@@ -114,6 +118,8 @@ window.__ModuleLoader__.load({
       'opt.permission': 'Permission',
       'opt.model': 'Model',
       'opt.workspace': 'Workspace',
+      'opt.goal': 'Goal mode',
+      'opt.goalHint': 'Keep the task as a goal so the session continues until done or it needs you.',
       'opt.addWorkspace': 'Add workspace…',
       'preset.standard': 'Standard',
       'preset.ptc': 'PTC',
@@ -203,6 +209,9 @@ window.__ModuleLoader__.load({
 /* 一级标题前的一小段品牌色，只做层次提示，不做装饰 */
 .dmc-h2::before{content:'';flex:none;width:3px;height:12px;border-radius:2px;background:var(--dmc-accent);opacity:.85}
 .dmc-h2>.dmc-icon{margin-left:auto}
+/* 标题行：设备选择紧跟标题，不撑到行尾。 */
+.dmc-h2>.dmc-picker{flex:none}
+.dmc-h2Title{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .dmc-listWrap{display:flex;flex-direction:column;gap:8px;min-width:0}
 .dmc-form{display:flex;flex-direction:column;gap:7px}
 .dmc-results{display:flex;flex-direction:column;gap:4px}
@@ -218,6 +227,12 @@ window.__ModuleLoader__.load({
 .dmc-chipBtn>svg{flex:none;color:var(--dsw-alias-label-tertiary)}
 .dmc-chipLabel{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .dmc-chipBtn::after{content:'';position:absolute;right:7px;top:50%;width:4px;height:4px;border-right:1px solid currentColor;border-bottom:1px solid currentColor;opacity:.55;transform:translateY(-70%) rotate(45deg)}
+/* 目标模式是开关，不是下拉：没有箭头，开着时用品牌色底。 */
+.dmc-chipToggle{display:inline-flex;align-items:center;gap:5px;flex:none;height:24px;padding:0 7px;border:0;border-radius:6px;background:transparent;color:var(--dsw-alias-label-secondary);font:inherit;font-size:11px;cursor:pointer}
+.dmc-chipToggle:hover{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}
+.dmc-chipToggle>svg{flex:none;color:var(--dsw-alias-label-tertiary)}
+.dmc-chipToggle.on,.dmc-chipToggle.on:hover{background:color-mix(in srgb,var(--dmc-accent) 12%,transparent);color:var(--dmc-accent)}
+.dmc-chipToggle.on>svg{color:var(--dmc-accent)}
 /* 自绘下拉：原生 select 的展开层由系统画，CSS 完全够不着。 */
 .dmc-menu{position:absolute;top:calc(100% + 6px);left:0;z-index:20;min-width:168px;max-width:280px;max-height:240px;overflow-y:auto;padding:4px;background:var(--dsw-alias-bg-overlay);border:.5px solid var(--dsw-alias-border-l2);border-radius:10px;box-shadow:0 10px 28px rgba(0,0,0,.18)}
 .dmc-menu.up{top:auto;bottom:calc(100% + 6px)}
@@ -572,6 +587,15 @@ window.__ModuleLoader__.load({
       )
     }
 
+    function GoalMini() {
+      return h(
+        'svg',
+        { width: 12, height: 12, viewBox: '0 0 16 16', fill: 'none', 'aria-hidden': true },
+        h('circle', { cx: 8, cy: 8, r: 5.2, stroke: 'currentColor', strokeWidth: 1.2 }),
+        h('circle', { cx: 8, cy: 8, r: 1.4, fill: 'currentColor' }),
+      )
+    }
+
     function CheckMini() {
       return h(
         'svg',
@@ -863,6 +887,7 @@ window.__ModuleLoader__.load({
         const [preset, setPreset] = useState('')
         const [permission, setPermission] = useState('')
         const [modelPick, setModelPick] = useState('')
+        const [goalMode, setGoalMode] = useState(false)
         const [workspaces, setWorkspaces] = useState([])
         const [workspace, setWorkspace] = useState('')
         const [picking, setPicking] = useState(false)
@@ -1155,6 +1180,7 @@ window.__ModuleLoader__.load({
               ...(preset ? { agentPreset: preset } : {}),
               ...(permission ? { permission } : {}),
               ...(provider && modelId ? { model: { provider, model: modelId } } : {}),
+              ...(goalMode && options?.goal ? { goal: true } : {}),
             })
             setResults(data.results ?? [])
             await refresh()
@@ -1413,23 +1439,13 @@ window.__ModuleLoader__.load({
                 )
               : null,
 
-            lease ? null : h('div', { className: 'dmc-h2' }, t('batch.title')),
-            lease ? null : h(
-              'div',
-              { className: 'dmc-form' },
-              h(
-                'div',
-                { className: 'dmc-composer' },
-                h('textarea', {
-                  className: 'dmc-composerInput',
-                  value: prompt,
-                  placeholder: t('batch.placeholder'),
-                  onChange: (event) => setPrompt(event.target.value),
-                }),
-                h(
+            lease
+              ? null
+              : h(
                   'div',
-                  { className: 'dmc-composerBar' },
-                  // 设备选择回到 composer 里，靠左和其他芯片并排
+                  { className: 'dmc-h2' },
+                  h('span', { className: 'dmc-h2Title' }, t('batch.title')),
+                  // 手机选择紧跟标题，放在标题右侧。
                   h(Picker, {
                     icon: PhoneMini,
                     title: t('batch.pick'),
@@ -1448,6 +1464,37 @@ window.__ModuleLoader__.load({
                       keepOpen: true,
                     },
                   }),
+                ),
+            lease ? null : h(
+              'div',
+              { className: 'dmc-form' },
+              h(
+                'div',
+                { className: 'dmc-composer' },
+                h('textarea', {
+                  className: 'dmc-composerInput',
+                  value: prompt,
+                  placeholder: t('batch.placeholder'),
+                  onChange: (event) => setPrompt(event.target.value),
+                }),
+                h(
+                  'div',
+                  { className: 'dmc-composerBar' },
+                  // 目标模式放最前；设备选择在标题行右侧。
+                  options?.goal
+                    ? h(
+                        'button',
+                        {
+                          type: 'button',
+                          className: `dmc-chipToggle${goalMode ? ' on' : ''}`,
+                          title: t('opt.goalHint'),
+                          'aria-pressed': goalMode ? 'true' : 'false',
+                          onClick: () => setGoalMode((value) => !value),
+                        },
+                        h(GoalMini),
+                        h('span', { className: 'dmc-chipLabel' }, t('opt.goal')),
+                      )
+                    : null,
                   workspaceEntries.length > 0
                     ? h(Picker, {
                         icon: FolderMini,
@@ -1530,7 +1577,11 @@ window.__ModuleLoader__.load({
                           h(
                             'div',
                             { className: 'dmc-sub' },
-                            item.ok ? item.sessionId : `${t('batch.failed')}: ${item.error}`,
+                            item.ok
+                              ? [item.sessionId, item.goalError ? `${t('batch.goalFailed')}: ${item.goalError}` : '']
+                                  .filter(Boolean)
+                                  .join(' · ')
+                              : `${t('batch.failed')}: ${item.error}`,
                           ),
                         ),
                         item.ok

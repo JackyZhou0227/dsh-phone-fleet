@@ -182,12 +182,21 @@ assert.equal(input?.type, 'textarea', 'composer 缺 textarea')
 const send = byClass(composer, 'dmc-send')[0]
 assert.ok(send, 'composer 缺发送键')
 assert.equal(send.props['aria-label'] !== undefined, true, '发送键缺 aria-label')
-// 设备选择是多选下拉，靠左排在 composer 芯片栏里（Picker 是组件，浅渲染只能看到 props）
-const bar = byClass(composer, 'dmc-composerBar')[0]
-const devicePick = bar.children.filter(Boolean).find((child) => typeof child.type === 'function')
-assert.ok(devicePick, '设备选择没在 composer 芯片栏里')
+// 设备选择是多选下拉，放在批量下发任务标题行的右边（Picker 是组件，浅渲染只能看到 props）
+const batchTitle = byClass(shell, 'dmc-h2')[0]
+const devicePick = batchTitle.children.filter(Boolean).find((child) => typeof child.type === 'function')
+assert.ok(devicePick, '设备选择没在批量下发任务标题行里')
+assert.equal(batchTitle.children[1], devicePick, '设备选择应紧跟标题')
 assert.equal(devicePick.props.multiple, true, '设备选择应该是多选')
 assert.ok(Array.isArray(devicePick.props.entries), '设备选择缺候选项')
+assert.match(css, /\.dmc-h2>\.dmc-picker\{flex:none\}/, '标题行里的设备选择不该被撑开')
+assert.doesNotMatch(css, /\.dmc-h2>\.dmc-picker\{margin-left:auto\}/, '设备选择应紧跟标题，不撑到行尾')
+const bar = byClass(composer, 'dmc-composerBar')[0]
+assert.equal(
+  bar.children.filter(Boolean).some((child) => typeof child.type === 'function' && child.props?.multiple),
+  false,
+  '设备选择不应再占芯片栏',
+)
 assert.equal(byClass(shell, 'dmc-devicePick').length, 0, '不该再有内联设备列表')
 assert.equal(byClass(shell, 'dmc-section').length, 0, '「批量下发」小标题应该换成大标题')
 
@@ -270,6 +279,33 @@ assert.match(
   /\.dmc-root\.idle \.dmc-main\{[^}]*max-width:640px/,
   'idle 页的宽度约束必须在基础规则里',
 )
+
+// 目标模式开关：宿主有 goals 服务时出现在芯片栏，点一下进入选中态。
+hookStates = [
+  null, '', { phase: 'waiting' }, [], '', false, [], 0, 280, false,
+  { goal: true }, '', '', '', false, [{ workspaceId: 'w', title: 'W' }], '', false,
+]
+hookCursor = 0
+const goalTree = body.component({ sessionId: 'session-1' })
+const goalToggle = byClass(goalTree, 'dmc-chipToggle')[0]
+assert.ok(goalToggle, '缺目标模式开关')
+assert.equal(goalToggle.props['aria-pressed'], 'false')
+assert.equal(goalToggle.props.title, 'opt.goalHint')
+const goalBar = byClass(goalTree, 'dmc-composerBar')[0]
+assert.equal(goalBar.children[0], goalToggle, '目标模式开关应排在芯片栏最前')
+assert.equal(typeof goalBar.children[1].type, 'function', '目标模式开关后面才是工作区选择')
+goalToggle.props.onClick()
+hookCursor = 0
+const goalOnTree = body.component({ sessionId: 'session-1' })
+const goalOnToggle = byClass(goalOnTree, 'dmc-chipToggle')[0]
+assert.equal(goalOnToggle.props['aria-pressed'], 'true')
+assert.match(goalOnToggle.props.className, /\bon\b/)
+// 宿主没有 goals 服务时（options.goal 为假）不显示这个开关。
+hookStates[10] = {}
+hookStates[14] = false
+hookCursor = 0
+assert.equal(byClass(body.component({ sessionId: 'session-1' }), 'dmc-chipToggle').length, 0)
+console.log('ok 目标模式开关：仅在可用时显示，可切换')
 
 console.log('ok client 注册：locale / tab type / body / title')
 console.log('ok client 结构：idle 页 + claimed 控制 / 状态 / 详情顺序 / 字族继承')

@@ -14,6 +14,7 @@ const created = []
 const prompted = []
 const modelsSelected = []
 const permissionsSet = []
+const goalsCreated = []
 const archived = new Set()
 const deleted = new Set()
 const fakeSessions = {
@@ -36,6 +37,9 @@ const fakeSessions = {
   async modelCatalog() {
     return { default: { provider: 'deepseek', model: 'v4-flash' }, routableProviders: ['deepseek'], groups: [], failures: [] }
   },
+  async resolveAgent(sessionId) {
+    return { agent: { id: sessionId } }
+  },
 }
 const ctx = {
   effect(register) {
@@ -53,6 +57,16 @@ const ctx = {
       return {
         async remoteExportList() {
           return { presets: [{ id: 'standard', name: '标准模式', isDefault: true }] }
+        },
+      }
+    }
+    if (name === 'goals') {
+      return {
+        get() {
+          return undefined
+        },
+        create(agent, request) {
+          goalsCreated.push({ agent, ...request })
         },
       }
     }
@@ -208,6 +222,7 @@ try {
       sessionId: 'me',
       workspaceId: 'ws-1',
       workspacePath: '/ws/one',
+      goal: true,
     }),
   })
   assert.equal(dispatch3.body.results[0].ok, true)
@@ -215,7 +230,10 @@ try {
   // session.create 只接受 workspaceId 或 cwd 其一，两个都给会报「accepts workspaceId or cwd, not both」
   assert.equal(created[1].options.workspaceId, 'ws-1')
   assert.equal(created[1].options.cwd, undefined, '指定工作区时不能再传 cwd')
-  console.log('ok 批量下发指定工作区')
+  assert.equal(goalsCreated.length, 1, '开启目标模式应创建目标')
+  assert.equal(goalsCreated[0].agent.id, created[1].sessionId)
+  assert.equal(goalsCreated[0].objective, '把截图存到工作区')
+  console.log('ok 批量下发指定工作区（可同时开启目标模式）')
   console.log('ok 批量下发自动建会话（cwd/预设/模型/权限）')
 
   // 会话归档 / 删除后自动解绑：租约跟着会话一起失效
