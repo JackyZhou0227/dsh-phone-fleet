@@ -31,7 +31,6 @@ window.__ModuleLoader__.load({
       'mirror.retry': '投屏连接已断开，正在重新连接',
       'mirror.failed': '投屏不可用',
       'mirror.retryAction': '重试',
-      'mirror.sizeHint': '投屏流尺寸（scrcpy 按 streamMaxSize 缩放），不代表设备屏幕分辨率。',
       'batch.title': '批量下发任务',
       'devices.title': '设备',
       'batch.placeholder': '向选中的设备统一下发任务，例如：打开“设置”，将屏幕亮度调至最高。',
@@ -98,7 +97,6 @@ window.__ModuleLoader__.load({
       'mirror.retry': 'Mirror dropped, reconnecting',
       'mirror.failed': 'Mirror unavailable',
       'mirror.retryAction': 'Retry',
-      'mirror.sizeHint': 'This is the stream size (scrcpy scales by streamMaxSize), not the phone screen resolution.',
       'batch.title': 'Dispatch a task',
       'devices.title': 'Devices',
       'batch.placeholder': 'Task for the selected devices, e.g. open Settings and set brightness to max.',
@@ -200,9 +198,6 @@ window.__ModuleLoader__.load({
 .dmc-kv b{flex:none;width:64px;font-weight:400;color:var(--dsw-alias-label-tertiary)}
 .dmc-kv span{flex:1 1 auto;min-width:0;color:var(--dsw-alias-label-secondary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .dmc-deviceDetails{display:none;flex-direction:column;gap:4px;padding:8px 0;border-top:.5px solid var(--dsw-alias-border-l3)}
-.dmc-sessionControl{display:flex;flex-direction:column;align-items:stretch;gap:6px}
-.dmc-sessionControl .dmc-hintText{min-width:0}
-.dmc-sessionControl .dmc-btn{align-self:flex-start}
 
 .dmc-h2{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:500;color:var(--dsw-alias-label-primary)}
 /* 一级标题前的一小段品牌色，只做层次提示，不做装饰 */
@@ -973,9 +968,11 @@ window.__ModuleLoader__.load({
               setPermission(
                 (current) =>
                   current ||
-                  data.permissions?.defaultPreset ||
-                  data.permissions?.options?.[0]?.value ||
-                  '',
+                  (data.permissions?.options?.some((item) => item.value === 'danger-full-access')
+                    ? 'danger-full-access'
+                    : data.permissions?.defaultPreset ||
+                      data.permissions?.options?.[0]?.value ||
+                      ''),
               )
               setModelPick((current) => {
                 if (current) return current
@@ -1190,7 +1187,7 @@ window.__ModuleLoader__.load({
 
         const statusText =
           mirror.phase === 'playing'
-            ? `${t('mirror.playing')} · ${mirror.width || '—'}×${mirror.height || '—'}`
+            ? t('mirror.playing')
             : mirror.phase === 'retry'
               ? t('mirror.retry')
               : mirror.phase === 'failed'
@@ -1370,31 +1367,18 @@ window.__ModuleLoader__.load({
           h(
             'div',
             { className: 'dmc-foot' },
-            lease
-              ? h(
-                  'div',
-                  { className: 'dmc-sessionControl' },
-                  h('div', { className: 'dmc-hintText' }, t('lease.hint')),
-                  h(
-                    'button',
-                    { type: 'button', className: 'dmc-btn', onClick: release },
-                    t('release'),
-                  ),
-                )
-              : null,
+            lease ? h('div', { className: 'dmc-hintText' }, t('lease.hint')) : null,
 
             lease
               ? h(
                   'div',
                   { className: 'dmc-status' },
                   h('span', { className: dotClass }),
+                  h('span', { className: 'dmc-statusText' }, statusText),
                   h(
-                    'span',
-                    {
-                      className: 'dmc-statusText',
-                      title: mirror.phase === 'playing' ? t('mirror.sizeHint') : undefined,
-                    },
-                    statusText,
+                    'button',
+                    { type: 'button', className: 'dmc-btn', onClick: release },
+                    t('release'),
                   ),
                   h(
                     'button',

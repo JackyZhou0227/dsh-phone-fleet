@@ -222,14 +222,21 @@ assert.equal(claimedShell.props.className, 'dmc-root')
 const claimedFoot = byClass(claimedShell, 'dmc-foot')[0]
 const claimedChildren = claimedFoot.children.filter(Boolean)
 const claimedClasses = claimedChildren.map((child) => child.props?.className)
-assert.deepEqual(claimedClasses, ['dmc-sessionControl', 'dmc-status', 'dmc-deviceDetails'])
+assert.deepEqual(claimedClasses, ['dmc-hintText', 'dmc-status', 'dmc-deviceDetails'])
+const claimedStatus = byClass(claimedFoot, 'dmc-status')[0]
+const statusButtons = claimedStatus.children.filter((child) => child?.type === 'button')
+assert.equal(statusButtons.length, 2, '解绑和刷新按钮都应放在状态行')
+assert.equal(statusButtons[0].props.className, 'dmc-btn', '解绑按钮应在刷新按钮左侧')
+assert.equal(statusButtons[1].props.className, 'dmc-icon', '刷新按钮应在最右')
+const statusTextNode = byClass(claimedStatus, 'dmc-statusText')[0]
+assert.equal(statusTextNode.children.join(''), 'mirror.playing', '状态行不应再拼投屏分辨率')
 const detailRows = byClass(claimedFoot, 'dmc-detailRow')
 const detailText = (row) => row.children.map((child) => child.children?.join('') ?? '').join(' ')
 const renderedDetails = detailRows.map(detailText).join('\n')
 for (const expected of ['ANDROID', 'Pixel 9', 'Android 16', 'Google', '36', '1080×2400', '420 dpi', 'USB', 'android-serial-1']) {
   assert.ok(renderedDetails.includes(expected), `认领设备详情缺少 ${expected}`)
 }
-assert.equal(byClass(claimedFoot, 'dmc-release').length, 0, '认领态解绑操作不应保留在底部区块')
+assert.ok(statusButtons.some((button) => button.children.includes('release')), '认领态应保留解绑会话按钮')
 
 // 缺少适配器字段时不渲染空详情行。
 fetchResponse = {
@@ -252,7 +259,7 @@ assert.match(css, /@container \(min-width:620px\)[\s\S]*?\.dmc-foot \.dmc-device
 assert.doesNotMatch(css, /secondaryPriority|lowPriority/, '详情不应按字段优先级分批显示')
 assert.match(clientSource, /kv\(t\('info\.serial'\), device\.id\)/, '完整详情应包含设备 ID')
 assert.match(clientSource, /kv\(t\('info\.connection'\), device\.connection\?\.toUpperCase\(\)\)/, '完整详情应包含连接方式')
-assert.match(css, /\.dmc-sessionControl\{[^}]*flex-direction:column/, '窄栏会话控制应纵向排列')
+assert.match(css, /\.dmc-status\{[^}]*display:flex/, '状态行应横向排列解绑与刷新按钮')
 assert.match(css, /@container \(max-width:619px\)[\s\S]*?\.dmc-root:not\(\.idle\) \.dmc-main\{[^}]*order:2/, '窄屏下主画布应排在顶部会话控制之后')
 
 // idle 页在宽布局里必须显式写回 display:flex —— 否则会被 .dmc-root 的 grid 拽成左右两列
