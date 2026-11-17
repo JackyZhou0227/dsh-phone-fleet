@@ -16,6 +16,8 @@ const DEFAULTS = {
   uiDumpTimeoutMs: 20000,
   // uiautomator 是间歇性失败：失败后再试一次，往往换个时刻就成了。
   uiDumpAttempts: 2,
+  // 等不到界面空闲（视频/直播页）时，先发一次媒体暂停再试；状态自己记，绝不每次 dump 前无脑发。
+  pauseOnIdle: true,
 }
 
 export const inject = ['tools', 'webServer', 'attachments']

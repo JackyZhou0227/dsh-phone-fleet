@@ -10,3 +10,5 @@
         streamMaxSize: 1024
         uiDumpTimeoutMs: 20000
         uiDumpAttempts: 2
+        pauseOnIdle: true
+        uiQueueLimit: 6

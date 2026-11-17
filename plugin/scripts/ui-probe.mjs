@@ -93,10 +93,15 @@ try {
   dump = await adapter.uiDump(deviceId)
   report.dump = {
     ok: true,
+    frame_id: dump.frameId,
     foreground: dump.foreground ?? null,
     space: { width: dump.width, height: dump.height },
+    origin: dump.origin,
     bytes: dump.bytes,
     nodes: dump.nodes.length,
+    totalNodes: dump.totalNodes,
+    clickable: dump.nodes.filter((node) => node.clickable).length,
+    media: dump.mediaState,
     attempts: dump.attempts,
     elapsedMs: dump.elapsedMs,
   }
@@ -133,10 +138,14 @@ console.log(`  wm size   ${sizeText(report.wmSize)}${
 }${report.wmSize?.physical ? `，物理 ${report.wmSize.physical.width}×${report.wmSize.physical.height}` : ''}`)
 console.log(`  截图      ${sizeText(report.screencap)}`)
 console.log(
-  `  UI 树     ${report.dump.ok ? `${report.dump.space.width}×${report.dump.space.height}，${report.dump.nodes} 个节点，${report.dump.elapsedMs}ms，${report.dump.bytes} 字节` : `失败 [${report.dump.code}] ${report.dump.elapsedMs}ms`}`,
+  `  UI 树     ${report.dump.ok ? `${report.dump.space.width}×${report.dump.space.height}，${report.dump.nodes} 个节点（可点 ${report.dump.clickable}，树内共 ${report.dump.totalNodes}），${report.dump.elapsedMs}ms，${report.dump.bytes} 字节` : `失败 [${report.dump.code}] ${report.dump.elapsedMs}ms`}`,
 )
 if (!report.dump.ok) console.log(`  原因      ${report.dump.message}`)
-if (report.dump.ok) console.log(`  前台      ${report.dump.foreground ?? '未知'}`)
+if (report.dump.ok) {
+  console.log(`  前台      ${report.dump.foreground ?? '未知'}`)
+  console.log(`  frame_id  ${report.dump.frame_id}（可传给 mobile_action 的 expect_frame）`)
+  console.log(`  媒体状态  ${report.dump.media}（unknown 表示插件没有判断过）`)
+}
 
 if (report.dump.ok) {
   const space = report.dump.space

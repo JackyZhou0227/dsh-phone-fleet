@@ -29,6 +29,8 @@
 | `streamMaxSize` | `1024` | 实时投屏画面的最长边像素。 |
 | `uiDumpTimeoutMs` | `20000` | 单次获取界面节点树的超时时间（毫秒）。 |
 | `uiDumpAttempts` | `2` | 界面树读取失败后的总尝试次数。 |
+| `pauseOnIdle` | `true` | 等不到界面空闲（视频/直播页）时，先发一次媒体暂停（keyevent 127）再试一次；状态由插件自己记，不会每次读树都发。 |
+| `uiQueueLimit` | `6` | 同一台设备上允许排队的操作数上限，超出直接返回 `busy`，避免排到工具超时。 |
 
 adb 默认按显式路径、PATH、Android SDK、插件缓存的顺序查找；需要时会从 Google 下载 platform-tools。下载文件保存在 Windows `%LOCALAPPDATA%\dsh-mobile-control`、macOS `~/Library/Caches/dsh-mobile-control` 或 Linux `~/.cache/dsh-mobile-control`。设 `autoProvision: false` 可禁止自动下载。
 
@@ -61,7 +63,7 @@ node plugin/test/android.mjs
 
 - `provision.mjs`：adb/hdc 路径解析及缺少工具时的错误处理，可离线运行。
 - `client.mjs`：客户端注册、DOM 结构与样式检查，可离线运行。
-- `uidump.mjs`：界面树读取的失败分类、重试、陈旧文件防护与坐标范围校验，可离线运行。
+- `uidump.mjs`：界面树读取全链路，可离线运行。覆盖失败分类与重试、陈旧文件防护、坐标范围校验、无文案可点节点的可定位性、`frame_id` 指纹、空闲超时的媒体暂停救援与状态记忆、同设备队列上限、文字匹配不猜、语义化滑动几何、`verify` 回执、截图裁切。
 - `goal.mjs`：批量下发的目标模式判定（创建、不覆盖、可替换、缺服务报错），可离线运行。
 - `routes.mjs`：HTTP 路由、设备租约互斥、批量下发及投屏流首包检查。
 - `android.mjs`：帧格式及 Android 截图、点击、界面树和 scrcpy 投屏；需要连接一台已授权的 Android 设备。
