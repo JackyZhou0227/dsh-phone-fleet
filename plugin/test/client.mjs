@@ -268,6 +268,13 @@ assert.match(css, /@container \(min-width:620px\)[\s\S]*?\.dmc-foot \.dmc-device
 assert.doesNotMatch(css, /secondaryPriority|lowPriority/, '详情不应按字段优先级分批显示')
 assert.match(clientSource, /kv\(t\('info\.serial'\), device\.id\)/, '完整详情应包含设备 ID')
 assert.match(clientSource, /kv\(t\('info\.connection'\), device\.connection\?\.toUpperCase\(\)\)/, '完整详情应包含连接方式')
+// 菜单自己就是 overflow 滚动容器：模型一多，滚它自己不能把下拉收起。
+assert.match(
+  clientSource,
+  /const onScroll = \(event\) => \{[\s\S]*?rootRef\.current\?\.contains\(target\)\) return[\s\S]*?\}/,
+  '菜单自身滚动不应关闭下拉',
+)
+assert.match(css, /\.dmc-menu\{[^}]*overflow-y:auto/, '菜单应自己滚动')
 assert.match(css, /\.dmc-status\{[^}]*display:flex/, '状态行应横向排列解绑与刷新按钮')
 assert.match(css, /@container \(max-width:619px\)[\s\S]*?\.dmc-root:not\(\.idle\) \.dmc-main\{[^}]*order:2/, '窄屏下主画布应排在顶部会话控制之后')
 

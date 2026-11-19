@@ -718,8 +718,13 @@ window.__ModuleLoader__.load({
           const onKeyDown = (event) => {
             if (event.key === 'Escape') close()
           }
-          // 菜单不是 fixed 定位，滚动后就会错位，直接收起最省事。
-          const onScroll = () => close()
+          // 菜单不是 fixed 定位，外部一滚就会错位，直接收起最省事。
+          // 但菜单自己就是滚动容器（模型一多就超 240px），滚它自己不能收。
+          const onScroll = (event) => {
+            const target = event?.target
+            if (target?.nodeType && rootRef.current?.contains(target)) return
+            close()
+          }
           document.addEventListener('pointerdown', onPointerDown, true)
           document.addEventListener('keydown', onKeyDown)
           document.addEventListener('scroll', onScroll, true)
