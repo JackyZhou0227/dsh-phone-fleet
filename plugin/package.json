@@ -38,6 +38,7 @@
   },
   "scripts": {
     "fetch-vendor": "node scripts/fetch-vendor.mjs",
+    "check:generic": "node scripts/check-generic.mjs",
     "test": "node test/android.mjs"
   },
   "license": "MIT"
