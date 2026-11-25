@@ -50,9 +50,11 @@ export function classifyDumpFailure(message) {
 
 const DUMP_CODE_HINT = {
   idle_timeout:
-    'uiautomator 等界面「空闲」超时（约 10s）。视频/直播/滚动列表这类页面的无障碍事件一直不停。' +
-    '插件会先发一次 127（媒体暂停）再试一次；还是失败就说明这页不是媒体在动——' +
-    '换到静态页面再读，或用 mobile_screenshot（带 with_ui）确认当前页面。',
+    'uiautomator 等界面「空闲」超时（约 10s）。视频/直播这类页面的无障碍事件一直不停。' +
+    '插件已经自动试过「发一次 127 暂停媒体再读」；如果还是失败，说明这页不是媒体在动' +
+    '（加载骨架、进度条、广告倒计时等），也可能 127 把暂停的页面又切成了播放。' +
+    '下一步：先 mobile_action key=mediaPause 把画面停住再读（能省掉 10s），' +
+    '或换到静态页面；也可以用 mobile_screenshot 先看清是什么页面。',
   dump_timeout: 'uiautomator dump 在超时时间内没返回。',
   device_offline: 'adb 连不上设备：检查 USB 线、USB 调试授权，或运行 adb devices。',
   xml_missing: 'dump 没有生成文件（通常是 dump 失败，或被其他 uiautomator 进程打断）。',
@@ -66,11 +68,12 @@ const DUMP_CODE_HINT = {
  */
 export class UiDumpError extends Error {
   constructor(code, info = {}) {
-    const { detail = '', foreground, elapsedMs, attempts = 1, xmlBytes } = info
+    const { detail = '', foreground, elapsedMs, attempts = 1, xmlBytes, mediaToggled } = info
     const context = [
       foreground ? `前台 ${foreground}` : '',
       Number.isFinite(elapsedMs) ? `耗时 ${elapsedMs}ms` : '',
       attempts > 1 ? `尝试 ${attempts} 次` : '',
+      mediaToggled === true ? '已试过暂停媒体' : '',
       Number.isFinite(xmlBytes) ? `${xmlBytes} 字节` : '',
     ]
       .filter(Boolean)
@@ -269,8 +272,6 @@ export class AndroidAdapter {
     this.frames = new Map()
     // 媒体暂停状态：127 是切换语义，必须自己记，否则每两次读失败一次。
     this.media = new Map()
-    // 已知「动画停不下来」的窗口：下次直接先暂停，省掉一次 10s 白等。
-    this.unstableWindows = new Map()
   }
 
   /**
@@ -603,7 +604,8 @@ export class AndroidAdapter {
    * 1. 每次用独立文件、并且先删再 dump —— 失败时绝不把旧树当本次结果；
    * 2. 失败要分类（idle / 掉线 / 空文件 / 超时），别统一报「没拿到 hierarchy」；
    * 3. dump 串行化 —— uiautomator 是单例，并发会互相打断；
-   * 4. 空闲超时先试一次「媒体暂停」救援（127），并记住这个窗口以后要先暂停。
+   * 4. 空闲超时就发一次 127（媒体暂停）重读一次；成功后如实记状态，失败再发一次还原。
+   *    「上次已暂停」的记忆不能拦住救援：App 会自己恢复播放。
    */
   async uiDump(deviceId, options = {}) {
     const attempts = Math.max(1, options.attempts ?? this.uiDumpAttempts)
@@ -614,12 +616,15 @@ export class AndroidAdapter {
     const startedAt = Date.now()
     const info = await this.foregroundInfo(deviceId)
     const foreground = info ? `${info.package}/${info.activity}` : undefined
-    const windowKey = foreground ?? ''
     const allowPause = (options.pauseOnIdle ?? this.pauseOnIdle) !== false
-    let mediaPaused = false
-    // 这个窗口上一轮就是靠暂停才读出来的：先暂停，省掉一次 10s 白等。
-    if (allowPause && windowKey && this.unstableWindows.get(deviceId) === windowKey) {
-      mediaPaused = (await this.pauseMedia(deviceId)).sent
+    // 127 是「切换」语义：一次读树最多动它一次，而且**不受「上次已暂停」的记忆阻挡**。
+    // 记忆只说明上一帧停过；App 自己恢复播放（翻页自动播、视频循环、用户点了播放）之后照样会卡住，
+    // 之前就是被这条假记忆挡住救援，才会一直报 idle_timeout 且一次 127 都没发。
+    let mediaToggled = false
+    if (allowPause && options.pauseFirst === true) {
+      // 调用方已经知道这是视频页：先暂停，省掉一次 10s 白等。
+      const paused = await this.pauseMedia(deviceId)
+      mediaToggled = paused.sent
     }
 
     let lastError = null
@@ -646,7 +651,8 @@ export class AndroidAdapter {
           foreground,
         }
         this.frames.set(deviceId, frame)
-        if (mediaPaused) this.unstableWindows.set(deviceId, windowKey)
+        // 靠暂停才读出来的这一帧：媒体现在确实是停的，如实记下来。
+        if (mediaToggled) this.media.set(deviceId, 'paused')
         return {
           ...tree,
           screen,
@@ -670,19 +676,18 @@ export class AndroidAdapter {
         if (!(error instanceof UiDumpError)) throw error
         lastError = error
         if (error.code === 'idle_timeout') {
-          if (allowPause && !mediaPaused) {
-            // 第一次空闲超时：发一次 127 再试。短视频类页面暂停后就能读到。
-            const paused = await this.pauseMedia(deviceId)
-            if (paused.sent) {
-              mediaPaused = true
-              continue
-            }
-          } else if (allowPause && mediaPaused) {
-            // 上一次 127 可能反而是「恢复播放」：再发一次还原成调用前的状态，别把用户的视频放着不管。
+          if (allowPause && !mediaToggled) {
+            // 再试一次：先发 127。短视频/直播页暂停后通常就能读到。
+            mediaToggled = true
             this.media.delete(deviceId)
-            await this.pauseMedia(deviceId).catch(() => {})
-            // 还原之后到底在播还是在停，我们并不知道，别留个假状态。
+            await this.call(deviceId, ['shell', 'input keyevent 127'], 15000)
+            continue
+          }
+          if (allowPause && mediaToggled) {
+            // 暂停了也读不出来：这页不是媒体在动。把 127 再发一次还原成调用前的状态，
+            // 别把用户的视频一直停着；状态清掉，下一轮重新判断。
             this.media.delete(deviceId)
+            await this.call(deviceId, ['shell', 'input keyevent 127'], 15000).catch(() => {})
           }
           // 空闲超时是确定性的：同一页面状态重复等只会再白等 10s（实测重试全部失败）。
           break
@@ -695,6 +700,7 @@ export class AndroidAdapter {
       foreground,
       attempts: attemptsMade,
       elapsedMs: Date.now() - startedAt,
+      mediaToggled,
     })
   }
 

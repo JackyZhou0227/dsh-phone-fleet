@@ -66,12 +66,19 @@ const PAUSE_ON_IDLE = {
   description: '读树遇到「等不到界面空闲」时，是否先发一次媒体暂停（keyevent 127）再试。默认 true。',
 }
 
+const PAUSE_FIRST = {
+  type: 'boolean',
+  description:
+    '先发一次媒体暂停（keyevent 127）再读，省掉 10s 的空闲等待。已知当前是视频/直播页时用它。默认 false。',
+}
+
 /** 内部读树用的选项：默认把图标类可点节点也带上。 */
 function dumpOptions(args = {}) {
   return {
     includeAllClickable: args.include_all_clickable !== false,
     compact: args.compact !== false,
     pauseOnIdle: args.pause_on_idle !== false,
+    pauseFirst: args.pause_first === true,
   }
 }
 
@@ -278,6 +285,7 @@ export function registerTools(ctx, { registry }) {
           description: '把截图裁成 UI 树范围（去掉系统栏），让图像像素与树坐标一致。默认 false。',
         },
         pause_on_idle: PAUSE_ON_IDLE,
+        pause_first: PAUSE_FIRST,
       },
     },
     output: {
@@ -325,6 +333,7 @@ export function registerTools(ctx, { registry }) {
         const snapshot = await adapter.uiSnapshot(device.id, {
           crop,
           pauseOnIdle: args?.pause_on_idle !== false,
+          pauseFirst: args?.pause_first === true,
         })
         shot = snapshot.shot
         dump = snapshot.dump
@@ -374,6 +383,7 @@ export function registerTools(ctx, { registry }) {
       '默认包含「没有文案但可点」的节点（图标类 UI 靠它定位），文本里标 [可点]。',
       '返回 frame_id：把它传给 mobile_action 的 expect_frame，界面变了就不会照着旧坐标点。',
       '视频/直播这类动画页面，uiautomator 等不到空闲时会先自动暂停一次媒体再试；仍失败会返回带分类码的错误。',
+      '已知当前是视频页时传 pause_first: true，可以省掉一次 10s 的空闲等待。',
     ].join(''),
     parameters: {
       type: 'object',
@@ -394,6 +404,7 @@ export function registerTools(ctx, { registry }) {
             '同时返回结构化的 nodes_detail，只带这些字段（例如 ["text","bounds","clickable"]）。字段越多越费 token。',
         },
         pause_on_idle: PAUSE_ON_IDLE,
+        pause_first: PAUSE_FIRST,
       },
     },
     output: textOutput({ type: 'object' }, 16000),
@@ -497,6 +508,7 @@ export function registerTools(ctx, { registry }) {
         verify_gone: { type: 'boolean', description: 'verify_text 是「应消失」时为 true。默认 false。' },
         verify_timeout_ms: { type: 'number', description: 'verify 的等待上限，默认 4000。' },
         pause_on_idle: PAUSE_ON_IDLE,
+        pause_first: PAUSE_FIRST,
       },
       required: ['action'],
     },

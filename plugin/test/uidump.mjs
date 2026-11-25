@@ -189,12 +189,39 @@ function fakeAdapter(handlerOrOptions, config = {}) {
   assert.equal(dump.attempts, 2)
   assert.equal(dump.frameId.length, 12)
 
-  // 同一个窗口已经知道会卡：下一轮先暂停（状态已是 paused，不再发键）
+  // 同一个窗口已经知道会卡：下一轮仍然先用普通 dump（能过就过），只是失败后还会救援
   const again = await adapter.uiDump('dev-1')
   assert.equal(state.dumps, 3)
-  assert.equal(state.keyevents, 1, '已经记成 paused，不该再发 127')
+  assert.equal(state.keyevents, 1, '上一帧暂停成功，这一帧不需要再发 127')
   assert.equal(again.mediaPaused, true)
   console.log('ok idle 救援 + 状态记忆')
+}
+
+// ---- 回归：记忆里是「已暂停」，但页面其实又播起来了 —— 救援不能被记忆挡住 ----
+{
+  const device = makeDevice({
+    onDump: (state) => (state.dumps === 1 ? 'ERROR: could not get idle state.' : 'UI hierchary dumped to: x'),
+  })
+  const { adapter, state } = fakeAdapter(device)
+  adapter.media.set('dev-1', 'paused') // 上一次救援留下的旧记忆（App 已经自己恢复播放了）
+  const dump = await adapter.uiDump('dev-1')
+  assert.equal(state.dumps, 2, '记忆里是 paused，也必须真的再试一次')
+  assert.equal(state.keyevents, 1, '必须真的发一次 127，而不是被记忆挡住')
+  assert.equal(dump.attempts, 2)
+  assert.equal(dump.mediaPaused, true)
+  console.log('ok 旧记忆不再挡住救援')
+}
+
+// ---- 已知是视频页：pause_first 先暂停，省掉一次 10s 白等 ----
+{
+  const { adapter, state } = fakeAdapter({})
+  const dump = await adapter.uiDump('dev-1', { pauseFirst: true })
+  assert.equal(state.keyevents, 1, '应该在 dump 之前就发 127')
+  assert.equal(state.dumps, 1, '一次就够')
+  assert.equal(dump.attempts, 1)
+  assert.equal(dump.mediaPaused, true)
+  assert.equal(adapter.mediaState('dev-1'), 'paused')
+  console.log('ok pause_first')
 }
 
 // ---- 救援也失败：要还原媒体状态，别把用户的视频放着 ----
@@ -214,7 +241,11 @@ function fakeAdapter(handlerOrOptions, config = {}) {
 // ---- 换页之后「已暂停」不再可信 ----
 {
   const device = makeDevice({
-    onDump: (state) => (state.dumps === 1 ? 'ERROR: could not get idle state.' : 'UI hierchary dumped to: x'),
+    // 第 1 次和第 3 次 dump 都卡住：中间那次（第 2 次）是救援后的成功
+    onDump: (state) =>
+      state.dumps === 1 || state.dumps === 3
+        ? 'ERROR: could not get idle state.'
+        : 'UI hierchary dumped to: x',
   })
   const { adapter, state } = fakeAdapter(device)
   await adapter.uiDump('dev-1')
@@ -222,7 +253,8 @@ function fakeAdapter(handlerOrOptions, config = {}) {
   await adapter.tap('dev-1', 540, 1062)
   assert.equal(adapter.mediaState('dev-1'), 'unknown', '点完/翻页后媒体状态要清掉')
   await adapter.uiDump('dev-1')
-  assert.equal(state.keyevents, 2, '换页后卡住要重新发一次 127')
+  assert.equal(state.keyevents, 2, '换页后又卡住，要重新发一次 127')
+  assert.equal(state.dumps, 4)
   console.log('ok 翻页后重新判断媒体状态')
 }
 
