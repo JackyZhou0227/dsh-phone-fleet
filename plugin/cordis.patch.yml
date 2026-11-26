@@ -1,5 +1,5 @@
 - insert:
-    - id: mobile-control
+    - id: phone-fleet
       name: 'dsh-phone-fleet'
       config:
         adbPath: adb

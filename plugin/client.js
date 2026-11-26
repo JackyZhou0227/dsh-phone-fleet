@@ -56,7 +56,7 @@ window.__ModuleLoader__.load({
       'preset.ptc': 'PTC',
       'preset.minimal': '极简',
       'preset.cordis': 'Cordis',
-      'preset.mobile-control': '手机操作',
+      'preset.phone-fleet': '手机操作',
       'perm.read-only': '只读',
       'perm.workspace-write': '工作区内修改',
       'perm.danger-full-access': '完全访问',
@@ -125,7 +125,7 @@ window.__ModuleLoader__.load({
       'preset.ptc': 'PTC',
       'preset.minimal': 'Minimal',
       'preset.cordis': 'Cordis',
-      'preset.mobile-control': 'Phone ops',
+      'preset.phone-fleet': 'Phone ops',
       'perm.read-only': 'Read-only',
       'perm.workspace-write': 'Workspace write',
       'perm.danger-full-access': 'Full access',
@@ -309,7 +309,7 @@ window.__ModuleLoader__.load({
       return new Promise((resolve) => setTimeout(resolve, ms))
     }
 
-    const PANE_KEY = 'dsh-mobile-control.paneWidth'
+    const PANE_KEY = 'dsh-phone-fleet.paneWidth'
     const PANE_MIN = 220
     const PANE_FALLBACK_MAX = 520
     // 和 .dmc-menu 的 max-width 保持一致：用来判断往右还放不放得下。
@@ -990,7 +990,7 @@ window.__ModuleLoader__.load({
               setPreset(
                 (current) =>
                   current ||
-                  data.presets?.find((item) => item.id === 'mobile-control')?.id ||
+                  data.presets?.find((item) => item.id === 'phone-fleet')?.id ||
                   data.presets?.find((item) => item.isDefault)?.id ||
                   data.presets?.[0]?.id ||
                   '',

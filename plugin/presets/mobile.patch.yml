@@ -4,10 +4,10 @@
 # 本文件只保留手机任务真正用得到的行：人设、文件、shell、后台任务、提问、待办、目标、压缩。
 # 用户在 Web 里保存的 preset 编辑会按行 id 覆盖这里的 config.plugins（与内置 preset 同规则）。
 - insert:
-    - id: preset-mobile-control
+    - id: preset-phone-fleet
       name: '@deepseek-ai/dsh-agent-preset'
       config:
-        id: mobile-control
+        id: phone-fleet
         name: 手机操作
         description: 查看屏幕、执行操作并确认结果；支持文件读写和 shell，便于采集手机数据。
         order: 5
