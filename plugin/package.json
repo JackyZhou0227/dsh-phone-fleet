@@ -1,6 +1,6 @@
 {
   "name": "dsh-phone-fleet",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "通过 DSH 同时连接并操作多台 Android、HarmonyOS 和 iOS 设备，一会话一设备互不抢占，并在右侧栏实时投屏",
   "type": "module",
   "repository": {
@@ -8,6 +8,23 @@
     "url": "git+https://github.com/JackyZhou0227/dsh-phone-fleet.git",
     "directory": "plugin"
   },
+  "homepage": "https://github.com/JackyZhou0227/dsh-phone-fleet#readme",
+  "bugs": {
+    "url": "https://github.com/JackyZhou0227/dsh-phone-fleet/issues"
+  },
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "android",
+    "adb",
+    "harmonyos",
+    "ios",
+    "phone",
+    "automation",
+    "ai-agent",
+    "multi-device"
+  ],
   "exports": {
     ".": "./index.js",
     "./client": "./client.js",
@@ -39,6 +56,8 @@
   "scripts": {
     "fetch-vendor": "node scripts/fetch-vendor.mjs",
     "check:generic": "node scripts/check-generic.mjs",
+    "sync-docs": "node scripts/sync-docs.mjs",
+    "prepublishOnly": "node scripts/sync-docs.mjs",
     "test": "node test/android.mjs"
   },
   "license": "MIT"
