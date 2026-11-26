@@ -1,6 +1,6 @@
 {
   "meta": {
-    "title": "手机控制",
+    "title": "手机操作",
     "description": "将 Android、HarmonyOS 和 iOS 设备接入 DSH，由 agent 执行设备操作；支持右侧栏实时投屏、多设备同时操作及批量下发任务。"
   }
 }

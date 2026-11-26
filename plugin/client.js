@@ -15,8 +15,8 @@ window.__ModuleLoader__.load({
     const FLAG_IMAGE = 8
 
     const zh = {
-      'type.label': '手机控制',
-      'guide.title': '手机控制',
+      'type.label': '手机操作',
+      'guide.title': '手机操作',
       'guide.description': '连接设备并实时投屏',
       rebooting: '插件已重新加载，请刷新页面后重试。',
       'devices.empty': '未检测到设备。请连接 USB、启用 USB 调试并完成授权后重试。',
@@ -84,8 +84,8 @@ window.__ModuleLoader__.load({
     }
 
     const en = {
-      'type.label': 'Mobile Control',
-      'guide.title': 'Mobile Control',
+      'type.label': 'Phone fleet',
+      'guide.title': 'Phone fleet',
       'guide.description': 'Connect a device and mirror it live',
       rebooting: 'Plugin reloaded. Refresh the page and try again.',
       'devices.empty': 'No devices found. Plug in USB, enable USB debugging, and authorize.',
