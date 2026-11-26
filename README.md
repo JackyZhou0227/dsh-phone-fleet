@@ -1,4 +1,4 @@
-# dsh-mobile-control
+# dsh-phone-fleet
 
 将 Android、HarmonyOS 和 iOS 设备接入 [DSH](https://github.com/DeepSeek-AI/DeepSeek-Harness)，让 agent 能查看屏幕、执行操作，并在侧栏查看设备画面。Android 通过 adb 连接；HarmonyOS 和 iOS 分别通过 hdc 和 WebDriverAgent 连接。
 
@@ -13,10 +13,10 @@
 
 ## 安装
 
-在 DSH 插件页添加 `@jackyzhou0227/dsh-mobile-control`，或运行：
+在 DSH 插件页添加 `dsh-phone-fleet`，或运行：
 
 ```bash
-dsh plugin add @jackyzhou0227/dsh-mobile-control
+dsh plugin add dsh-phone-fleet
 ```
 
 安装后重启 DSH，让插件和「手机操作」工作模式生效。
@@ -44,4 +44,4 @@ dsh plugin add @jackyzhou0227/dsh-mobile-control
 
 ## 问题与贡献
 
-使用中遇到问题，请在 [GitHub Issues](https://github.com/JackyZhou0227/dsh-mobile-control/issues) 提交复现步骤、DSH 版本和设备信息。开发测试与发布说明见[贡献指南](CONTRIBUTING.md)。
+使用中遇到问题，请在 [GitHub Issues](https://github.com/JackyZhou0227/dsh-phone-fleet/issues) 提交复现步骤、DSH 版本和设备信息。开发测试与发布说明见[贡献指南](CONTRIBUTING.md)。

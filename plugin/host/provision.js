@@ -121,12 +121,12 @@ export class Provisioner {
   /** adb / hdc 都放这里，装一次以后离线可用。 */
   get cacheDir() {
     if (this.platform === 'win32') {
-      return join(this.env.LOCALAPPDATA || join(this.homeDir, 'AppData', 'Local'), 'dsh-mobile-control')
+      return join(this.env.LOCALAPPDATA || join(this.homeDir, 'AppData', 'Local'), 'dsh-phone-fleet')
     }
     if (this.platform === 'darwin') {
-      return join(this.homeDir, 'Library', 'Caches', 'dsh-mobile-control')
+      return join(this.homeDir, 'Library', 'Caches', 'dsh-phone-fleet')
     }
-    return join(this.env.XDG_CACHE_HOME || join(this.homeDir, '.cache'), 'dsh-mobile-control')
+    return join(this.env.XDG_CACHE_HOME || join(this.homeDir, '.cache'), 'dsh-phone-fleet')
   }
 
   findOnPath(name) {

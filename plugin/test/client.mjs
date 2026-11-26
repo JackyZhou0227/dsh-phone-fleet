@@ -40,7 +40,7 @@ const require = (name) => (name === 'react' ? react : {})
 await import('../client.js')
 
 assert.ok(loaded, 'client.js 没有注册模块')
-assert.equal(loaded.id, '@jackyzhou0227/dsh-mobile-control')
+assert.equal(loaded.id, 'dsh-phone-fleet')
 assert.equal(typeof loaded.factory, 'function')
 
 const mod = loaded.factory(require)
@@ -99,7 +99,7 @@ assert.deepEqual(Object.keys(dicts.zh).sort(), Object.keys(dicts.en).sort())
 // tab type
 assert.equal(registered.tabs.length, 1)
 const tab = registered.tabs[0]
-assert.equal(tab.id, '@jackyzhou0227/dsh-mobile-control')
+assert.equal(tab.id, 'dsh-phone-fleet')
 assert.equal(tab.kind, 'mobile')
 assert.equal(tab.multiple, false)
 assert.equal(tab.priority, 'builtin')
@@ -114,7 +114,7 @@ assert.equal(registered.slots.length, 2)
 const names = registered.slots.map((entry) => entry.options.name).sort()
 assert.deepEqual(names, ['sidebar.right.pane.tab', 'sidebar.right.pane.tab.title'])
 for (const entry of registered.slots) {
-  assert.equal(entry.options.key, '@jackyzhou0227/dsh-mobile-control')
+  assert.equal(entry.options.key, 'dsh-phone-fleet')
   assert.equal(typeof entry.component, 'function')
 }
 

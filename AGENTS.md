@@ -1,4 +1,4 @@
-# dsh-mobile-control 项目约定
+# dsh-phone-fleet 项目约定
 
 > 给在本仓库工作的 agent 和维护者看。违反第一节的改动不要提。
 
@@ -55,7 +55,7 @@ node plugin/test/uidump.mjs             # 感知/动作链路离线断言（当�
 
 - 改行为必须同时补/改离线断言（`uidump.mjs` 覆盖：失败分类、重试、陈旧文件、坐标校验、节点选择、frame_id、idle 救援、队列、文字匹配、滑动几何、verify、PNG 裁切）。
 - 提交前跑：`uidump / provision / routes / goal` 全绿；改了真机行为再跑 `android.mjs`（需要一台在线 Android 设备）。
-- 版本语义：修 bug 升 patch，兼容性新能力升 minor，破坏性变更升 major（当前 `0.3.1`）。
+- 版本语义：修 bug 升 patch，兼容性新能力升 minor，破坏性变更升 major（当前 `0.4.0`）。
 - 提交信息用中文、写清「现象 / 根因 / 修法 / 实测」，推送 `origin main`。
 - 新增工具或参数时，先回答第一节的判断题，再写 schema 和参数描述。
 

@@ -39,11 +39,11 @@ try {
   // 3. 之前下载到缓存的
   {
     const localAppData = join(root, 'localappdata')
-    const cached = join(localAppData, 'dsh-mobile-control', 'platform-tools', 'adb.exe')
+    const cached = join(localAppData, 'dsh-phone-fleet', 'platform-tools', 'adb.exe')
     await touch(cached)
     const provision = new Provisioner({}, win({ PATH: '', LOCALAPPDATA: localAppData, USERPROFILE: home }))
     assert.equal(provision.adbPath(), cached)
-    assert.equal(provision.cacheDir, join(localAppData, 'dsh-mobile-control'))
+    assert.equal(provision.cacheDir, join(localAppData, 'dsh-phone-fleet'))
     console.log('ok 缓存目录')
   }
 

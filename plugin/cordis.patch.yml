@@ -1,6 +1,6 @@
 - insert:
     - id: mobile-control
-      name: '@jackyzhou0227/dsh-mobile-control'
+      name: 'dsh-phone-fleet'
       config:
         adbPath: adb
         hdcPath: hdc

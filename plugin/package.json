@@ -1,11 +1,11 @@
 {
-  "name": "@jackyzhou0227/dsh-mobile-control",
-  "version": "0.3.1",
-  "description": "通过 DSH 会话操作 Android、HarmonyOS 和 iOS 设备，并在右侧栏实时投屏",
+  "name": "dsh-phone-fleet",
+  "version": "0.4.0",
+  "description": "通过 DSH 同时连接并操作多台 Android、HarmonyOS 和 iOS 设备，一会话一设备互不抢占，并在右侧栏实时投屏",
   "type": "module",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/JackyZhou0227/dsh-mobile-control.git",
+    "url": "git+https://github.com/JackyZhou0227/dsh-phone-fleet.git",
     "directory": "plugin"
   },
   "exports": {

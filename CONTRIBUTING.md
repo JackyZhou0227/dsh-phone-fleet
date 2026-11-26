@@ -32,7 +32,7 @@
 | `pauseOnIdle` | `true` | 等不到界面空闲（视频/直播页）时，先发一次媒体暂停（keyevent 127）再试一次；状态由插件自己记，不会每次读树都发。 |
 | `uiQueueLimit` | `6` | 同一台设备上允许排队的操作数上限，超出直接返回 `busy`，避免排到工具超时。 |
 
-adb 默认按显式路径、PATH、Android SDK、插件缓存的顺序查找；需要时会从 Google 下载 platform-tools。下载文件保存在 Windows `%LOCALAPPDATA%\dsh-mobile-control`、macOS `~/Library/Caches/dsh-mobile-control` 或 Linux `~/.cache/dsh-mobile-control`。设 `autoProvision: false` 可禁止自动下载。
+adb 默认按显式路径、PATH、Android SDK、插件缓存的顺序查找；需要时会从 Google 下载 platform-tools。下载文件保存在 Windows `%LOCALAPPDATA%\dsh-phone-fleet`、macOS `~/Library/Caches/dsh-phone-fleet` 或 Linux `~/.cache/dsh-phone-fleet`。设 `autoProvision: false` 可禁止自动下载。
 
 hdc 只从 PATH 和 DevEco Studio SDK 目录探测，不会自动下载。若安装在其他位置，请设置 `hdcPath`。iOS 适配需要用户自行准备 WDA，并在 macOS 上运行。
 

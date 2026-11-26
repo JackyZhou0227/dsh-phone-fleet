@@ -1,12 +1,12 @@
 window.__ModuleLoader__.load({
-  id: '@jackyzhou0227/dsh-mobile-control',
+  id: 'dsh-phone-fleet',
   factory(require) {
     const React = require('react')
     const h = React.createElement
     const { useCallback, useEffect, useRef, useState } = React
 
     const NS = 'mobileControl'
-    const ID = '@jackyzhou0227/dsh-mobile-control'
+    const ID = 'dsh-phone-fleet'
     const KIND = 'mobile'
 
     const FLAG_CONFIG = 1
